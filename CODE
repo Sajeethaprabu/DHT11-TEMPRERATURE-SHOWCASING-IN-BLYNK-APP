@@ -1,0 +1,53 @@
+#define BLYNK_TEMPLATE_ID "TMPL3LL0b8gAS"
+#define BLYNK_TEMPLATE_NAME "dht11"
+#define BLYNK_AUTH_TOKEN "TwwCA6Cq0xqulqI2W4FDGIuDOCcQ_vmJ"
+
+#define BLYNK_PRINT Serial
+
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+#include <DHT.h>
+
+// Blynk credentials
+char ssid[] = "STIC";           // Your WiFi SSID
+char pass[] = "stic@123";       // Your WiFi password
+
+// DHT sensor setup
+#define DHTPIN 27               // GPIO pin where DHT is connected
+#define DHTTYPE DHT11           // DHT 11
+
+DHT dht(DHTPIN, DHTTYPE);
+BlynkTimer timer;
+
+void sendSensor() {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  // Send to Blynk
+  Blynk.virtualWrite(V1, t);  // Temperature to V1
+  Blynk.virtualWrite(V2, h);  // Humidity to V2
+
+  // Print to Serial Monitor
+  Serial.print("Temperature: ");
+  Serial.print(t);
+  Serial.print(" °C  |  Humidity: ");
+  Serial.print(h);
+  Serial.println(" %");
+}
+
+void setup() {
+  Serial.begin(115200);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  dht.begin();
+  timer.setInterval(2000L, sendSensor);  // Every 2 seconds
+}
+
+void loop() {
+  Blynk.run();
+  timer.run();
+}
